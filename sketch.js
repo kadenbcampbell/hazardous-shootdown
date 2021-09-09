@@ -695,7 +695,7 @@ class Projectile {
     // decrase radius when damaged ("shrinking" effect)
     this.rad = (this.hp / this.maxHp * 0.3 + 0.7) * this.maxRad;
   }
-  collide() {
+  collide(i) {
     hazards.forEach(h => {
       let distance = dist(h.pos.x, h.pos.y, this.pos.x, this.pos.y);
       if (distance < h.rad + this.rad + 10 && this.isActive && h.isActive) {
@@ -723,6 +723,25 @@ class Projectile {
         if (this.hp > 0) this.hp--;
       }
     });
+    projectiles.forEach((p, j) => {
+      let distance = dist(p.pos.x, p.pos.y, this.pos.x, this.pos.y);
+      if (distance < p.rad + this.rad + 10 && this.isActive && p.isActive && i !== j) {
+        let overlap = p.rad + this.rad + 10 - distance;
+        let totalVel = sqrt(sq(this.vel.x) + sq(this.vel.y)) + sqrt(sq(p.vel.x) + sq(p.vel.y));
+
+        // redirect after collision
+        p.vel.x = cos(atan2(p.pos.y - this.pos.y, p.pos.x - this.pos.x)) * totalVel * sq(this.rad) / (sq(this.rad) + sq(p.rad));
+        p.vel.y = sin(atan2(p.pos.y - this.pos.y, p.pos.x - this.pos.x)) * totalVel * sq(this.rad) / (sq(this.rad) + sq(p.rad));
+        this.vel.x = cos(atan2(this.pos.y - p.pos.y, this.pos.x - p.pos.x)) * totalVel * sq(p.rad) / (sq(this.rad) + sq(p.rad));
+        this.vel.y = sin(atan2(this.pos.y - p.pos.y, this.pos.x - p.pos.x)) * totalVel * sq(p.rad) / (sq(this.rad) + sq(p.rad));
+
+        // prevent overlap
+        p.pos.x += cos(atan2(p.pos.y - this.pos.y, p.pos.x - this.pos.x)) * overlap * sq(this.rad) / (sq(this.rad) + sq(p.rad));
+        p.pos.y += sin(atan2(p.pos.y - this.pos.y, p.pos.x - this.pos.x)) * overlap * sq(this.rad) / (sq(this.rad) + sq(p.rad));
+        this.pos.x += cos(atan2(this.pos.y - p.pos.y, this.pos.x - p.pos.x)) * overlap * sq(p.rad) / (sq(this.rad) + sq(p.rad));
+        this.pos.y += sin(atan2(this.pos.y - p.pos.y, this.pos.x - p.pos.x)) * overlap * sq(p.rad) / (sq(this.rad) + sq(p.rad));
+      }
+    });
   }
 }
 
@@ -731,7 +750,7 @@ function draw() {
 
   projectiles.forEach((p, i) => {
     p.draw();
-    p.collide();
+    p.collide(i);
   });
 
   hazards.forEach((h, i) => {
