@@ -31,6 +31,10 @@
  * use the mouse cursor to aim
  * press left mouse button to shoot
  * press left shift to show debug info
+ * shoot hazards to destroy them before they destroy you
+ * 
+ * LEADERBOARD
+ * 1.   Kaden Campbell   4173
  */
 
 /// <reference path="./p5.global-mode.d.ts"/>
@@ -54,27 +58,30 @@ let difficulty = 1.00;
  */
 let score = 0;
 
-let colors;
-let turret;
-let hazard;
-let projectile;
-let crosshair;
+// settings
+let colors, turret, hazard, projectile;
+
+// crosshair object
+let crosshair = { x: 0, y: 0, rad: 45 };
+
+// game item arrays
+let hazards = [];
+let turrets = [];
+let projectiles = [];
 
 function setup() {
-  // set color mode
-  colorMode(RGB, 1, 1, 1, 1);
+  colorMode(RGB, 100, 100, 100, 1);
 
-  // color settings
   colors = {
-    blue: color(0, 0.7, 0.9),
-    black: color(0.3, 0.3, 0.3),
-    red: color(0.9, 0.3, 0.3),
-    green: color(0, 0.9, 0.4),
-    purple: color(0.8, 0.5, 1.0),
-    yellow: color(1.0, 0.9, 0.3),
-    orange: color(0.9, 0.5, 0.3),
-    gray: color(0.6, 0.6, 0.6),
-    indigo: color(0.5, 0.6, 1.0),
+    blue: color(0, 70, 90),
+    black: color(30, 30, 30),
+    red: color(90, 30, 30),
+    green: color(0, 90, 40),
+    purple: color(80, 50, 100),
+    yellow: color(100, 90, 30),
+    orange: color(90, 50, 30),
+    gray: color(60, 60, 60),
+    indigo: color(50, 60, 100),
   };
 
   turret = {
@@ -162,32 +169,16 @@ function setup() {
     },
   ];
 
-  // create canvas
   createCanvas(windowWidth, windowHeight);
-
-  // set angle mode
   angleMode(DEGREES);
-
-  // set frame rate
   frameRate(60);
-
-  // set stroke weight
   strokeWeight(5);
-
-  // set text alignment and font
   textAlign(CENTER, CENTER);
   textFont(loadFont("assets/Roboto-Black.ttf"));
 
-  // create player
+  // create player turret
   turrets.push(new Turret({ x: windowWidth / 2, y: windowHeight / 2 }, ...Object.values(turret)));
-
-  // initialize crosshair
-  crosshair = { x: 0, y: 0, rad: 45 };
 }
-
-let hazards = [];
-let turrets = [];
-let projectiles = [];
 
 class Turret {
   constructor(pos, rotSpeed, spread, fireRate, hp) {
@@ -212,7 +203,7 @@ class Turret {
     translate(this.pos.x, this.pos.y);
     scale(this.scale);
     rotate(this.rot);
-    translate(-10, 0);
+    // translate(-10, 0);
     rotate(-this.rot);
 
     // health bar
@@ -311,60 +302,77 @@ class Turret {
   }
   collide() {
     hazards.forEach(h => {
-      let d = dist(h.pos.x, h.pos.y, this.pos.x, this.pos.y) // distance between hazard and turret
-      if (d <= 30 + h.rad + 15 && this.isActive && h.isActive) {
-        let o = h.rad + 30 + 15 - d, // overlap between turret and hazard
+      let distance = dist(h.pos.x, h.pos.y, this.pos.x, this.pos.y)
+      if (distance < 30 + h.rad + 10 && this.isActive && h.isActive) {
+        let overlap = h.rad + 30 + 10 - distance;
+        let slope = atan2(h.pos.y - this.pos.y, h.pos.x - this.pos.x);
+        let vel = sqrt(sq(h.vel.x) + sq(h.vel.y));
 
-          s = slope(this.pos.x, this.pos.y, h.pos.x, h.pos.y), // collision slope
-          v = sqrt(sq(h.vel.x) + sq(h.vel.y));                 // collision velocity
+        // redirect after collision
+        h.vel.x = cos(slope) * vel;
+        h.vel.y = sin(slope) * vel;
 
-        // redirect hazard after collision
-        h.vel.x = cos(s) * v;
-        h.vel.y = sin(s) * v;
-
-        // prevent turret and hazard from overlapping
-        h.pos.x += cos(s) * o;
-        h.pos.y += sin(s) * o;
+        // prevent overlap
+        h.pos.x += cos(slope) * overlap;
+        h.pos.y += sin(slope) * overlap;
 
         // apply damage
         if (this.hp > 0) this.hp--;
         if (h.hp > 0) h.hp--;
 
-        // show damage indicator (red flash when damaged)
+        // animate damage indicator
         h.opacity.damageIndicator = 1;
         this.opacity.damageIndicator = 1;
       }
     });
+    projectiles.forEach(p => {
+      let distance = dist(p.pos.x, p.pos.y, this.pos.x, this.pos.y)
+      if (distance <= 30 + p.rad + 10 && this.isActive && p.isActive) {
+        let overlap = p.rad + 30 + 10 - distance;
+        let slope = atan2(p.pos.y - this.pos.y, p.pos.x - this.pos.x);
+        let vel = sqrt(sq(p.vel.x) + sq(p.vel.y));
+
+        // redirect after collision
+        p.vel.x = cos(slope) * vel;
+        p.vel.y = sin(slope) * vel;
+
+        // prevent overlap
+        p.pos.x += cos(slope) * overlap;
+        p.pos.y += sin(slope) * overlap;
+      }
+    });
   }
   shootProjectiles() {
-    if (mouseIsPressed && this.isActive) {
-      // shoot projectile when timer depletes
-      if (this.projectileTimer === 0) {
-        // apply recoil to turret (knockback effect when shooting)
-        this.recoil = 5;
-        let pos = {
-          x: this.pos.x + cos(this.rot) * (15 + projectile.rad / 2), // x position
-          y: this.pos.y + sin(this.rot) * (15 + projectile.rad / 2), // y position
-        },
-          slope = this.rot + random(-this.spread / 2, this.spread / 2); // slope
-        projectiles.push(new Projectile(pos, slope, projectile.rad, projectile.speed, projectile.hp));
-        // reset projectile timer to fire rate
-        this.projectileTimer = 60 / this.fireRate;
+    if (this.isActive) {
+      if (mouseIsPressed) {
+        // shoot projectile when timer depletes
+        if (this.projectileTimer === 0) {
+          // apply recoil to turret (knockback effect when shooting)
+          this.recoil = 5;
+          let pos = {
+            x: this.pos.x + cos(this.rot) * (15 + projectile.rad / 2), // x position
+            y: this.pos.y + sin(this.rot) * (15 + projectile.rad / 2), // y position
+          },
+            slope = this.rot + random(-this.spread / 2, this.spread / 2); // slope
+          projectiles.push(new Projectile(pos, slope, projectile.rad, projectile.speed, projectile.hp));
+          // reset projectile timer to fire rate
+          this.projectileTimer = 60 / this.fireRate;
+        }
       }
+      // decrement projectile timer
+      if (this.projectileTimer > 0) this.projectileTimer--;
     }
-    // decrement projectile timer
-    if (this.projectileTimer > 0) this.projectileTimer--;
   }
   spawnHazards() {
     // spawn hazard when hazard timer depletes
     if (this.hazardTimer <= 0) {
-      let angle = random(360),
-        pos = {
-          x: windowWidth / 2 + cos(angle) * 500,
-          y: windowHeight / 2 + sin(angle) * 500,
-        },
-        s = slope(pos.x, pos.y, this.pos.x, this.pos.y),
-        vel = { x: 0, y: 0 };
+      let angle = random(360);
+      let pos = {
+        x: windowWidth / 2 + cos(angle) * 500,
+        y: windowHeight / 2 + sin(angle) * 500,
+      };
+      let slope = atan2(this.pos.y - pos.y, this.pos.x - pos.x);
+      let vel = { x: 0, y: 0 };
 
       // determine total weight of all hazard types
       let modifiedWeight = [], total = 0;
@@ -374,13 +382,13 @@ class Turret {
       });
 
       // determine hazard type to spawn
-      let r = random(total), type;
+      let roll = random(total), type;
       hazard.forEach((h, i) => {
-        if (typeof type === "undefined" && r < modifiedWeight[i]) type = i;
-        else r -= modifiedWeight[i];
+        if (typeof type === "undefined" && roll < modifiedWeight[i]) type = i;
+        else roll -= modifiedWeight[i];
       });
 
-      hazards.push(new Hazard(pos, s, vel, ...Object.values(hazard[type])));
+      hazards.push(new Hazard(pos, slope, vel, ...Object.values(hazard[type])));
       // reset hazard timer based on current difficulty
       this.hazardTimer = 240 / sqrt(difficulty);
     }
@@ -459,20 +467,20 @@ class Hazard {
   animate(i) {
     if (this.target.found) {
       // attack nearest turret within range
-      this.slope = slope(this.pos.x, this.pos.y, turrets[this.target.index].pos.x, turrets[this.target.index].pos.y);
-      this.vel.x += (cos(this.slope) * this.speed - this.vel.x) / 32;
-      this.vel.y += (sin(this.slope) * this.speed - this.vel.y) / 32;
+      this.slope = atan2(turrets[this.target.index].pos.y - this.pos.y, turrets[this.target.index].pos.x - this.pos.x);
+      this.vel.x += (cos(this.slope) * this.speed - this.vel.x) / 25;
+      this.vel.y += (sin(this.slope) * this.speed - this.vel.y) / 25;
 
       // decrement time to live
       this.timeToLive--;
     }
     else {
       // drift around idly
-      this.vel.x += (cos(this.slope) * this.speed / 4 - this.vel.x) / 64;
-      this.vel.y += (sin(this.slope) * this.speed / 4 - this.vel.y) / 64;
+      this.vel.x += (cos(this.slope) * this.speed / 4 - this.vel.x) / 50;
+      this.vel.y += (sin(this.slope) * this.speed / 4 - this.vel.y) / 50;
 
       // rapidly decrement time to live
-      this.timeToLive -= 100;
+      this.timeToLive -= 50;
     }
 
     if (this.isActive) {
@@ -518,30 +526,22 @@ class Hazard {
   }
   collide(i) {
     hazards.forEach((h, j) => {
-      let d = dist(h.pos.x, h.pos.y, this.pos.x, this.pos.y) // distance between hazards
-      if (d <= h.rad + this.rad + 15 && this.isActive && h.isActive && i !== j) {
-        let o = h.rad + this.rad + 15 - d, // overlap between hazards
-
-          s1 = slope(this.pos.x, this.pos.y, h.pos.x, h.pos.y), // slope of other hazard
-          s2 = slope(h.pos.x, h.pos.y, this.pos.x, this.pos.y), // slope of this hazard
-
-          r1 = pow(this.rad, 3) / (pow(this.rad, 3) + pow(h.rad, 3)), // size ratio of other hazard
-          r2 = pow(h.rad, 3) / (pow(this.rad, 3) + pow(h.rad, 3)),    // size ratio of this hazard
-
-          v1 = sqrt(sq(this.vel.x) + sq(this.vel.y)), // velocity of other hazard
-          v2 = sqrt(sq(h.vel.x) + sq(h.vel.y));       // velocity of this hazard
+      let distance = dist(h.pos.x, h.pos.y, this.pos.x, this.pos.y);
+      if (distance < h.rad + this.rad + 10 && this.isActive && h.isActive && i !== j) {
+        let overlap = h.rad + this.rad + 10 - distance;
+        let totalVel = sqrt(sq(this.vel.x) + sq(this.vel.y)) + sqrt(sq(h.vel.x) + sq(h.vel.y));
 
         // redirect after collision
-        h.vel.x = cos(s1) * (v1 + v2) * r1;
-        h.vel.y = sin(s1) * (v1 + v2) * r1;
-        this.vel.x = cos(s2) * (v1 + v2) * r2;
-        this.vel.y = sin(s2) * (v1 + v2) * r2;
+        h.vel.x = cos(atan2(h.pos.y - this.pos.y, h.pos.x - this.pos.x)) * totalVel * sq(this.rad) / (sq(this.rad) + sq(h.rad));
+        h.vel.y = sin(atan2(h.pos.y - this.pos.y, h.pos.x - this.pos.x)) * totalVel * sq(this.rad) / (sq(this.rad) + sq(h.rad));
+        this.vel.x = cos(atan2(this.pos.y - h.pos.y, this.pos.x - h.pos.x)) * totalVel * sq(h.rad) / (sq(this.rad) + sq(h.rad));
+        this.vel.y = sin(atan2(this.pos.y - h.pos.y, this.pos.x - h.pos.x)) * totalVel * sq(h.rad) / (sq(this.rad) + sq(h.rad));
 
-        // prevent hazards from overlapping
-        h.pos.x += cos(s1) * o * r1;
-        h.pos.y += sin(s1) * o * r1;
-        this.pos.x += cos(s2) * o * r2;
-        this.pos.y += sin(s2) * o * r2;
+        // prevent overlap
+        h.pos.x += cos(atan2(h.pos.y - this.pos.y, h.pos.x - this.pos.x)) * overlap * sq(this.rad) / (sq(this.rad) + sq(h.rad));
+        h.pos.y += sin(atan2(h.pos.y - this.pos.y, h.pos.x - this.pos.x)) * overlap * sq(this.rad) / (sq(this.rad) + sq(h.rad));
+        this.pos.x += cos(atan2(this.pos.y - h.pos.y, this.pos.x - h.pos.x)) * overlap * sq(h.rad) / (sq(this.rad) + sq(h.rad));
+        this.pos.y += sin(atan2(this.pos.y - h.pos.y, this.pos.x - h.pos.x)) * overlap * sq(h.rad) / (sq(this.rad) + sq(h.rad));
       }
     });
   }
@@ -561,37 +561,37 @@ class Hazard {
     if (!this.isActive && this.abilities.includes("splitOnDeath") && this.target.found && !this.hasSplit) {
       this.hasSplit = true;
       for (let i = 0; i < 3; i++) {
-        let angle = random(360) + i * 120,
-          pos = {
-            x: this.pos.x + cos(angle) * (this.rad + 12),
-            y: this.pos.y + sin(angle) * (this.rad + 12),
-          },
-          vel = {
-            x: cos(angle) * this.speed * 4,
-            y: sin(angle) * this.speed * 4,
-          },
-          rad = this.maxRad * 0.7,
-          hp = this.maxHp / 2,
-          speed = this.speed * 2;
-        hazards.push(new Hazard(pos, angle, vel, this.color, rad, speed, hp, []));
+        let slope = random(360) + i * 120;
+        let pos = {
+          x: this.pos.x + cos(slope) * (this.rad + 12),
+          y: this.pos.y + sin(slope) * (this.rad + 12),
+        };
+        let vel = {
+          x: cos(slope) * this.speed * 4,
+          y: sin(slope) * this.speed * 4,
+        };
+        let rad = this.maxRad * 0.7;
+        let hp = this.maxHp / 2;
+        let speed = this.speed * 2;
+        hazards.push(new Hazard(pos, slope, vel, this.color, rad, speed, hp, []));
       }
     }
   }
   spawnHazards(i) {
     if (this.abilities.includes("spawnHazards") && this.target.found) {
       if (this.hazardTimer === 0) {
-        let angle = slope(this.pos.x, this.pos.y, turrets[this.target.index].pos.x, turrets[this.target.index].pos.y) - 90 + random(180),
-          pos = {
-            x: this.pos.x + cos(angle) * (this.rad + 20),
-            y: this.pos.y + sin(angle) * (this.rad + 20),
-          },
-          rad = 12,
-          hp = 2,
-          vel = {
-            x: cos(angle) * 8,
-            y: sin(angle) * 8,
-          };
-        hazards.push(new Hazard(pos, angle, vel, this.color, rad, 6, hp, []));
+        let slope = atan2(turrets[this.target.index].pos.y - this.pos.y, turrets[this.target.index].pos.x - this.pos.x) - 90 + random(180);
+        let pos = {
+          x: this.pos.x + cos(slope) * (this.rad + 20),
+          y: this.pos.y + sin(slope) * (this.rad + 20),
+        };
+        let rad = 12;
+        let hp = 2;
+        let vel = {
+          x: cos(slope) * 8,
+          y: sin(slope) * 8,
+        };
+        hazards.push(new Hazard(pos, slope, vel, this.color, rad, 6, hp, []));
         // reset hazard spawn timer
         this.hazardTimer = floor(1920 / this.maxRad);
       }
@@ -601,15 +601,15 @@ class Hazard {
   evadeProjectiles() {
     if (this.abilities.includes("evadeProjectiles")) {
       projectiles.forEach(p => {
-        let d = dist(p.pos.x, p.pos.y, this.pos.x, this.pos.y); // distance between projectile and hazard
+        let distance = dist(p.pos.x, p.pos.y, this.pos.x, this.pos.y); // distance between projectile and hazard
         // check if projectile is near hazard
-        if (d <= (p.rad + this.rad + 15) * 2 && this.isActive && p.isActive) {
+        if (distance <= (p.rad + this.rad + 10) * 2 && this.isActive && p.isActive) {
           // slope from projectile to hazard
-          let s = slope(p.pos.x, p.pos.y, this.pos.x, this.pos.y);
+          let slope = atan2(this.pos.y - p.pos.y, this.pos.x - p.pos.x);
 
           // move hazard away from projectile
-          this.vel.x += cos(s) * this.speed / 6;
-          this.vel.y += sin(s) * this.speed / 6;
+          this.vel.x += cos(slope) * this.speed / 6;
+          this.vel.y += sin(slope) * this.speed / 6;
         }
       });
     }
@@ -697,32 +697,24 @@ class Projectile {
   }
   collide() {
     hazards.forEach(h => {
-      let d = dist(h.pos.x, h.pos.y, this.pos.x, this.pos.y); // distance between projectile and hazard
-      if (d <= h.rad + this.rad + 15 && this.isActive && h.isActive) {
-        let o = h.rad + this.rad + 15 - d, // overlap between projectile and hazard
-
-          s1 = slope(this.pos.x, this.pos.y, h.pos.x, h.pos.y), // slope of projectile
-          s2 = slope(h.pos.x, h.pos.y, this.pos.x, this.pos.y), // slope of hazard
-
-          r1 = pow(this.rad, 3) / (pow(this.rad, 3) + pow(h.rad, 3)), // size ratio of projectile
-          r2 = pow(h.rad, 3) / (pow(this.rad, 3) + pow(h.rad, 3)),    // size ratio of hazard
-
-          v1 = sqrt(sq(this.vel.x) + sq(this.vel.y)), // velocity of projectile
-          v2 = sqrt(sq(h.vel.x) + sq(h.vel.y));       // velocity of hazard
+      let distance = dist(h.pos.x, h.pos.y, this.pos.x, this.pos.y);
+      if (distance < h.rad + this.rad + 10 && this.isActive && h.isActive) {
+        let overlap = h.rad + this.rad + 10 - distance;
+        let totalVel = sqrt(sq(this.vel.x) + sq(this.vel.y)) + sqrt(sq(h.vel.x) + sq(h.vel.y));
 
         // redirect after collision
-        h.vel.x = cos(s1) * (v1 + v2) * r1;
-        h.vel.y = sin(s1) * (v1 + v2) * r1;
-        this.vel.x = cos(s2) * (v1 + v2) * r2;
-        this.vel.y = sin(s2) * (v1 + v2) * r2;
+        h.vel.x = cos(atan2(h.pos.y - this.pos.y, h.pos.x - this.pos.x)) * totalVel * sq(this.rad) / (sq(this.rad) + sq(h.rad));
+        h.vel.y = sin(atan2(h.pos.y - this.pos.y, h.pos.x - this.pos.x)) * totalVel * sq(this.rad) / (sq(this.rad) + sq(h.rad));
+        this.vel.x = cos(atan2(this.pos.y - h.pos.y, this.pos.x - h.pos.x)) * totalVel * sq(h.rad) / (sq(this.rad) + sq(h.rad));
+        this.vel.y = sin(atan2(this.pos.y - h.pos.y, this.pos.x - h.pos.x)) * totalVel * sq(h.rad) / (sq(this.rad) + sq(h.rad));
 
-        // prevent projectile and hazard from overlapping
-        h.pos.x += cos(s1) * o * r1;
-        h.pos.y += sin(s1) * o * r1;
-        this.pos.x += cos(s2) * o * r2;
-        this.pos.y += sin(s2) * o * r2;
+        // prevent overlap
+        h.pos.x += cos(atan2(h.pos.y - this.pos.y, h.pos.x - this.pos.x)) * overlap * sq(this.rad) / (sq(this.rad) + sq(h.rad));
+        h.pos.y += sin(atan2(h.pos.y - this.pos.y, h.pos.x - this.pos.x)) * overlap * sq(this.rad) / (sq(this.rad) + sq(h.rad));
+        this.pos.x += cos(atan2(this.pos.y - h.pos.y, this.pos.x - h.pos.x)) * overlap * sq(h.rad) / (sq(this.rad) + sq(h.rad));
+        this.pos.y += sin(atan2(this.pos.y - h.pos.y, this.pos.x - h.pos.x)) * overlap * sq(h.rad) / (sq(this.rad) + sq(h.rad));
 
-        // show damage indicator (red flash when damaged)
+        // animate damage indicator
         h.opacity.damageIndicator = 1;
         this.opacity.damageIndicator = 1;
 
@@ -735,7 +727,7 @@ class Projectile {
 }
 
 function draw() {
-  background(1);
+  background(100);
 
   projectiles.forEach((p, i) => {
     p.draw();
@@ -867,8 +859,4 @@ function burst(x, y, rad) {
     vertex(x + sin(22.5 + i * 45) * rad * 0.8, y + cos(22.5 + i * 45) * rad * 0.8);
   }
   endShape();
-}
-
-function slope(x, y, x2, y2) {
-  return atan2(y2 - y, x2 - x);
 }
