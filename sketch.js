@@ -94,7 +94,7 @@ function setup() {
   projectile = {
     rad: 12,    // radius           (pixels)
     speed: 6,   // movement speed   (pixels per frame)
-    hp: 3,      // health points    (damage required to destroy it)
+    hp: 2,      // health points    (damage required to destroy it)
   };
 
   hazard = [
@@ -264,7 +264,7 @@ class Turret {
       if (this.opacity.master < 1) this.opacity.master += 0.1;
 
       // decrease damage indicator opacity (red flash when damaged)
-      this.opacity.damageIndicator -= 0.05;
+      if (this.opacity.damageIndicator > 0) this.opacity.damageIndicator -= 0.05;
 
       // hide and show health bar
       if (this.hp === this.maxHp && this.opacity.hpBar > 0) this.opacity.hpBar -= 0.1;
@@ -399,28 +399,28 @@ class Turret {
 
 class Hazard {
   constructor(pos, slope, vel, color, rad, speed, hp, abilities) {
-    this.pos = { x: pos.x, y: pos.y }; // position
-    this.vel = vel;                    // velocity
-    this.rad = rad;                    // radius (pixels)
-    this.maxRad = rad;                 // max radius
-    this.speed = speed;                // movement speed (pixels per frame)
-    this.hp = hp;                      // health points
-    this.maxHp = hp;                   // max health points
-    this.color = color;                // color
-    this.hpDisplay = hp;               // health point display
-    this.rot = 0;                      // rotation (degrees)
-    this.isActive = true;              // isActive?
-    this.scale = 0;                    // scale
-    this.timeToLive = rad * 144;       // time to live (frames)
-    this.hazardTimer = 0;              // hazard spawn timer (for hazards with "mothership" ability)
-    this.hasSplit = false;             // has split? 
-    this.slope = slope;                // slope (direction of travel)
+    this.pos = { x: pos.x, y: pos.y };
+    this.vel = vel;
+    this.rad = rad;
+    this.maxRad = rad;
+    this.speed = speed;
+    this.hp = hp;
+    this.maxHp = hp;
+    this.color = color;
+    this.hpDisplay = hp;
+    this.rot = 0;
+    this.isActive = true;
+    this.scale = 0;
+    this.timeToLive = rad * 144;
+    this.hazardTimer = 0;
+    this.hasSplit = false;
+    this.slope = slope;
     this.opacity = {
-      master: 1,                       // master opacity
-      hpBar: 0,                        // health bar opacity
-      damageIndicator: 0,              // damage indicator opacity (red flash when damaged)
+      master: 1,
+      hpBar: 0,
+      damageIndicator: 0,
     };
-    this.abilities = abilities;        // abilities
+    this.abilities = abilities;
     this.target = { found: false, index: null };
   }
   draw() {
@@ -493,7 +493,7 @@ class Hazard {
       if (this.hp < this.maxHp && this.opacity.hpBar < 1) this.opacity.hpBar += 0.1;
 
       // animate damage indicator (red flash when damaged)
-      this.opacity.damageIndicator -= 0.05;
+      if (this.opacity.damageIndicator > 0) this.opacity.damageIndicator -= 0.05;
     } else {
       // death animation
       this.scale += 0.05;
@@ -671,7 +671,7 @@ class Projectile {
       if (this.opacity.master < 1) this.opacity.master += 0.1;
 
       // animate damage indicator (red flash when damaged)
-      this.opacity.damageIndicator -= 0.05;
+      if (this.opacity.damageIndicator > 0) this.opacity.damageIndicator -= 0.05;
 
       // decrement time to live 
       this.timeToLive--;
