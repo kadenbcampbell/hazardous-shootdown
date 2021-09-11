@@ -618,25 +618,25 @@ class Hazard {
 
 class Projectile {
   constructor(pos, slope, rad, speed, hp) {
-    this.pos = { x: pos.x, y: pos.y }; // position
+    this.pos = { x: pos.x, y: pos.y };
     this.vel = {
-      x: cos(slope) * speed,   // x velocity
-      y: sin(slope) * speed,   // y velocity
+      x: cos(slope) * speed,
+      y: sin(slope) * speed,
     };
-    this.maxRad = rad;        // maximum radius
-    this.rad = rad;            // radius
-    this.speed = speed;        // movement speed
-    this.maxHp = hp;          // maximum health points
-    this.hp = hp;              // health points
-    this.slope = slope;        // direction of travel (degrees)
-    this.rot = 0;              // rotation
+    this.maxRad = rad;
+    this.rad = rad;
+    this.speed = speed;
+    this.maxHp = hp;
+    this.hp = hp;
+    this.slope = slope;
+    this.rot = 0;
     this.isActive = true;
     this.opacity = {
-      master: 1,       // master opacity
-      damageIndicator: 0, // damage indicator opacity
+      master: 1,
+      damageIndicator: 0,
     };
-    this.timeToLive = 300;   // time to live
-    this.scale = 0;            // scale
+    this.timeToLive = 300;
+    this.scale = 0;
   }
   draw() {
     // set opacity
