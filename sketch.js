@@ -1,3 +1,4 @@
+/// <reference path="./p5.global-mode.d.ts"/>
 /**
  * MIT License
  * 
@@ -37,11 +38,9 @@
  * 1.   Kaden Campbell   4173
  */
 
-/// <reference path="./p5.global-mode.d.ts"/>
-
 /**
  * DIFFICULTY
- * increases by 0.01 per second
+ * increases by 0.01 (1% additive) per second
  * 
  * AS DIFFICULTY INCREASES:
  * increased probability to spawn higher difficulty hazards
@@ -59,7 +58,10 @@ let difficulty = 1.00;
 let score = 0;
 
 // settings
-let colors, turret, hazard, projectile;
+let colors;
+let turret;
+let hazard;
+let projectile;
 
 // crosshair object
 let crosshair = { x: 0, y: 0, rad: 45 };
@@ -526,7 +528,7 @@ class Hazard {
   }
   collide(i) {
     hazards.forEach((h, j) => {
-      let distance = dist(h.pos.x, h.pos.y, this.pos.x, this.pos.y);
+      const distance = dist(h.pos.x, h.pos.y, this.pos.x, this.pos.y);
       if (distance < h.rad + this.rad + 10 && this.isActive && h.isActive && i !== j) {
         let overlap = h.rad + this.rad + 10 - distance;
         let totalVel = sqrt(sq(this.vel.x) + sq(this.vel.y)) + sqrt(sq(h.vel.x) + sq(h.vel.y));
@@ -709,10 +711,10 @@ class Projectile {
         this.vel.y = sin(atan2(this.pos.y - h.pos.y, this.pos.x - h.pos.x)) * totalVel * sq(h.rad) / (sq(this.rad) + sq(h.rad));
 
         // prevent overlap
-        h.pos.x += cos(atan2(h.pos.y - this.pos.y, h.pos.x - this.pos.x)) * overlap * sq(this.rad) / (sq(this.rad) + sq(h.rad));
-        h.pos.y += sin(atan2(h.pos.y - this.pos.y, h.pos.x - this.pos.x)) * overlap * sq(this.rad) / (sq(this.rad) + sq(h.rad));
-        this.pos.x += cos(atan2(this.pos.y - h.pos.y, this.pos.x - h.pos.x)) * overlap * sq(h.rad) / (sq(this.rad) + sq(h.rad));
-        this.pos.y += sin(atan2(this.pos.y - h.pos.y, this.pos.x - h.pos.x)) * overlap * sq(h.rad) / (sq(this.rad) + sq(h.rad));
+        // h.pos.x += cos(atan2(h.pos.y - this.pos.y, h.pos.x - this.pos.x)) * overlap * sq(this.rad) / (sq(this.rad) + sq(h.rad));
+        // h.pos.y += sin(atan2(h.pos.y - this.pos.y, h.pos.x - this.pos.x)) * overlap * sq(this.rad) / (sq(this.rad) + sq(h.rad));
+        // this.pos.x += cos(atan2(this.pos.y - h.pos.y, this.pos.x - h.pos.x)) * overlap * sq(h.rad) / (sq(this.rad) + sq(h.rad));
+        // this.pos.y += sin(atan2(this.pos.y - h.pos.y, this.pos.x - h.pos.x)) * overlap * sq(h.rad) / (sq(this.rad) + sq(h.rad));
 
         // animate damage indicator
         h.opacity.damageIndicator = 1;
@@ -746,7 +748,7 @@ class Projectile {
 }
 
 function draw() {
-  background(100);
+  background(90);
 
   projectiles.forEach((p, i) => {
     p.draw();
