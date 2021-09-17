@@ -1,3 +1,4 @@
+import GameObject from './game_object.js';
 export default class Hazard extends GameObject {
   constructor(position, velocity, radius, health, speed, color, slope, abilities, timeToLive) {
     super(position, velocity, radius, health, speed, color);
