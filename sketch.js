@@ -1,7 +1,7 @@
 /// <reference path='p5.d.ts' />
 
-import GameObject from './modules/game_object';
-import Hazard from './modules/hazard';
+import GameObject from './modules/game_object.js';
+import Hazard from './modules/hazard.js';
 
 function sketch(p5) {
   const game = {
