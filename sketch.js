@@ -1,7 +1,8 @@
 /// <reference path='p5.d.ts' />
 
-import GameObject from './modules/game_object.js';
 import Hazard from './modules/hazard.js';
+import Turret from './modules/turret.js';
+import Projectile from './modules/projectile.js';
 
 function sketch(p5) {
   const game = {
@@ -19,7 +20,7 @@ function sketch(p5) {
   };
 
   p5.setup = function () {
-    game.createObject(new Hazard({ x: 200, y: 200, }, { x: 0, y: 0, }, 10, 5, 2, 'rgb(255, 0, 0)', 0, ['evadesProjectiles'], 300));
+    game.createObject(new Hazard({ x: 200, y: 200, }, { x: 0, y: 0, }, 10, 5, 2, 'rgb(255, 0, 0)', 0, 0, ['evadesProjectiles'], 300));
   };
   p5.draw = function () {
 
