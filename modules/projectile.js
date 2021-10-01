@@ -5,6 +5,9 @@ export default class Projectile extends GameObject {
     this.slope = slope;
     this.timeToLive = timeToLive;
   }
+  animate() {
+    
+  }
   collide() {
 
   }
