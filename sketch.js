@@ -362,7 +362,7 @@ class Turret {
         }
       }
       // decrement projectile timer
-      if (this.projectileTimer > 0) this.projectileTimer--;
+      if (this.projectileTimer > 0) this.projectileTimer -= Math.min(1, this.projectileTimer);
     }
   }
   spawnHazards() {
