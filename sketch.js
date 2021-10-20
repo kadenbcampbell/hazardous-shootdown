@@ -397,7 +397,7 @@ class Turret {
       this.hazardTimer = 240 / sqrt(difficulty);
     }
     // decrement hazard timer
-    this.hazardTimer--;
+    this.hazardTimer -= Math.min(1, this.hazardTimer);
   }
 }
 
@@ -763,13 +763,13 @@ function draw() {
     h.collide(i);
     h.splitOnDeath();
     h.evadeProjectiles();
-    h.spawnHazards(i);
+    if (hazards.length < 64) h.spawnHazards(i);
   });
 
   turrets.forEach((t, i) => {
     t.draw();
     t.collide();
-    t.spawnHazards();
+    if (hazards.length < 64) t.spawnHazards();
     t.shootProjectiles();
   });
 
@@ -905,7 +905,7 @@ function keyPressed() {
           score += 1e6;
           break;
         case '2':
-          turret.fireRate = 40;
+          turretba.fireRate = 40;
           turret.rotSpeed = 10;
           turret.maxHp = 128;
           turret.hp = 128;
