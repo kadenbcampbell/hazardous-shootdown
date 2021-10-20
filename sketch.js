@@ -883,9 +883,16 @@ function burst(x, y, rad) {
 }
 
 function totallyNotACheatCodeIAddedToTheGameForMia() {
-  turrets[0].fireRate = 40;
-  turrets[0].rotSpeed = 10;
-  turrets[0].maxHp = 128;
-  turrets[0].hp = 128;
-  difficulty = 10;
+  if (turrets[0]) {
+    console.log(`CHEAT CODE APPLIED SUCCESSFULLY. ENJOY!`);
+    turrets[0].fireRate = 40;
+    turrets[0].rotSpeed = 10;
+    turrets[0].maxHp = 128;
+    turrets[0].hp = 128;
+    difficulty = 10;
+  } else {
+    console.log(`ERROR: YOU IDIOT, THE TURRET ALREADY DIED! AND I'M TOO LAZY TO WRITE CODE TO FIX IT. RELOAD THE PAGE AND TYPE THE CODE AGAIN BUT FASTER. (AND JUST FOR LAUGHS, I GAVE YOU A TRILLION POINTS.)`);
+    score = 1000000000000;
+  }
+  
 }
