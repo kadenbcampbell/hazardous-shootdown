@@ -35,7 +35,9 @@
  * shoot hazards to destroy them before they destroy you
  * 
  * LEADERBOARD
- * 1.   Kaden Campbell   4173
+ * 1.   Kaden Campbell      4173
+ * 2.   Mia Hecht-Nielsen   2357
+ * 3.   Arden Noland        379
  */
 
 /**
@@ -882,17 +884,42 @@ function burst(x, y, rad) {
   endShape();
 }
 
-function totallyNotACheatCodeIAddedToTheGameForMia() {
-  if (turrets[0]) {
-    console.log(`CHEAT CODE APPLIED SUCCESSFULLY. ENJOY!`);
-    turrets[0].fireRate = 40;
-    turrets[0].rotSpeed = 10;
-    turrets[0].maxHp = 128;
-    turrets[0].hp = 128;
-    difficulty = 10;
+let konamiProgress = 0, konami = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+function keyPressed() {
+  if (keyCode === konami[konamiProgress]) {
+    konamiProgress++;
   } else {
-    console.log(`ERROR: YOU IDIOT, THE TURRET ALREADY DIED! AND I'M TOO LAZY TO WRITE CODE TO FIX IT. RELOAD THE PAGE AND TYPE THE CODE AGAIN BUT FASTER. (AND JUST FOR LAUGHS, I GAVE YOU A TRILLION POINTS.)`);
-    score = 1000000000000;
+    konamiProgress = 0;
   }
-  
-}
+  if (konamiProgress >= 10) {
+    promptMode();
+    function promptMode() {
+      const mode = prompt('CHEAT CODE ENTERED\n\nCHOOSE AN OPTION (enter the number)\n1. revive turret\n2: god mode\n3: gain 1,000,000 points\n4: the game is too easy. make it harder');
+      switch (mode) {
+        case null:
+          break;
+        case '4':
+          difficulty *= 10;
+          break;
+        case '3':
+          score += 1e6;
+          break;
+        case '2':
+          turret.fireRate = 40;
+          turret.rotSpeed = 10;
+          turret.maxHp = 128;
+          turret.hp = 128;
+        case '1':
+          turrets = [];
+          turrets.push(new Turret({ x: windowWidth / 2, y: windowHeight / 2 }, ...Object.values(turret)));
+          break;
+        default:
+          promptMode();
+      }
+    }
+
+    
+
+
+  }
+};
