@@ -883,7 +883,7 @@ function burst(x, y, rad) {
 }
 
 function totallyNotACheatCodeIAddedToTheGameForMia() {
-  turrets[0].fireRate = 20;
+  turrets[0].fireRate = 40;
   turrets[0].rotSpeed = 10;
   turrets[0].maxHp = 128;
   turrets[0].hp = 128;
