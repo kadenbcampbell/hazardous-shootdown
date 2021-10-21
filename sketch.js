@@ -886,26 +886,17 @@ function burst(x, y, rad) {
 
 let konamiProgress = 0, konami = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
 function keyPressed() {
-  if (keyCode === konami[konamiProgress]) {
-    konamiProgress++;
-  } else {
-    konamiProgress = 0;
-  }
+  konamiProgress = keyCode === konami[konamiProgress] ? ++konamiProgress : 0;
   if (konamiProgress >= 10) {
     promptMode();
     function promptMode() {
       const mode = prompt('CHEAT CODE ENTERED\n\nCHOOSE AN OPTION (enter the number)\n1. revive turret\n2: god mode\n3: gain 1,000,000 points\n4: the game is too easy. make it harder');
       switch (mode) {
-        case null:
-          break;
-        case '4':
-          difficulty *= 10;
-          break;
-        case '3':
-          score += 1e6;
-          break;
+        case null: break;
+        case '4': difficulty *= 10; break;
+        case '3': score += 1e6; break;
         case '2':
-          turretba.fireRate = 40;
+          turret.fireRate = 40;
           turret.rotSpeed = 10;
           turret.maxHp = 128;
           turret.hp = 128;
@@ -913,8 +904,7 @@ function keyPressed() {
           turrets = [];
           turrets.push(new Turret({ x: windowWidth / 2, y: windowHeight / 2 }, ...Object.values(turret)));
           break;
-        default:
-          promptMode();
+        default: promptMode();
       }
     }
 
