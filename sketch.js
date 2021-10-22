@@ -763,13 +763,13 @@ function draw() {
     h.collide(i);
     h.splitOnDeath();
     h.evadeProjectiles();
-    if (hazards.length < 64) h.spawnHazards(i);
+    if (hazards.length < 100) h.spawnHazards(i);
   });
 
   turrets.forEach((t, i) => {
     t.draw();
     t.collide();
-    if (hazards.length < 64) t.spawnHazards();
+    if (hazards.length < 100) t.spawnHazards();
     t.shootProjectiles();
   });
 
@@ -884,7 +884,8 @@ function burst(x, y, rad) {
   endShape();
 }
 
-let konamiProgress = 0, konami = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+let konamiProgress = 0;
+const konami = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
 function keyPressed() {
   konamiProgress = keyCode === konami[konamiProgress] ? ++konamiProgress : 0;
   if (konamiProgress >= 10) {
@@ -907,9 +908,5 @@ function keyPressed() {
         default: promptMode();
       }
     }
-
-    
-
-
   }
 };

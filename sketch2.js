@@ -2,15 +2,16 @@
 
 import Game from './modules/game.js';
 
-const game = new Game();
+let game;
 
 function sketch(p5) {
   p5.setup = function () {
+    game = new Game(p5.windowWidth, p5.windowHeight);
     p5.createCanvas(p5.windowWidth, p5.windowHeight);
-    p5.background(0);
   };
   p5.draw = function () {
-    game.draw();
+    p5.background(0);
+    game.draw(p5);
   };
 };
 
