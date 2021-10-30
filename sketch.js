@@ -181,7 +181,9 @@ function setup() {
   textFont(loadFont("assets/Roboto-Black.ttf"));
 
   // create player turret
-  turrets.push(new Turret({ x: windowWidth / 2, y: windowHeight / 2 }, ...Object.values(turret)));
+  while (turrets.length < 90) {
+    turrets.push(new Turret({ x: windowWidth / 2 + cos(turrets.length * 360 / 90) * windowWidth / 2, y: windowHeight / 2 + sin(turrets.length * 360 / 90) * windowHeight / 2 }, ...Object.values(turret)));
+  }
 }
 
 class Turret {
@@ -763,13 +765,13 @@ function draw() {
     h.collide(i);
     h.splitOnDeath();
     h.evadeProjectiles();
-    if (hazards.length < 100) h.spawnHazards(i);
+    h.spawnHazards(i);
   });
 
   turrets.forEach((t, i) => {
     t.draw();
     t.collide();
-    if (hazards.length < 100) t.spawnHazards();
+    t.spawnHazards();
     t.shootProjectiles();
   });
 

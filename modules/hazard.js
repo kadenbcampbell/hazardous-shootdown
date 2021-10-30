@@ -1,17 +1,14 @@
 import Entity from './entity.js';
 export default class Hazard extends Entity {
-  constructor(position, velocity, radius, health, speed, color, abilities, slope, timeToLive) {
-    super(position, velocity, radius, health, color, 1);
-    this.slope = slope;
-    this.timeToLive = timeToLive;
+  constructor(p5, gameRef, entityIndex, position, velocity, acceleration, radius, health, speed, color, abilities, slope, timeToLive) {
+    super(p5, gameRef, entityIndex, position, velocity, acceleration, radius, health, color, 1, speed);
+    Object.assign(this, { slope, timeToLive });
     abilities.forEach(ability => this[ability] = true);
     this.hasSplit = false;
     this.hazardSpawnTimer = 0;
-    this.targettedEntityReference = null;
-    this.speed = speed;
-    this.maxSpeed = speed;
+    this.targettedEntityRef = null;
     this.rotation = 0;
-    this.scale = 1;
+    this.scale = 0;
   }
   evadeProjectiles() {
 
@@ -23,21 +20,30 @@ export default class Hazard extends Entity {
 
   }
   attackTurrets() {
-    this.targettedEntityReference = null;
-    let minDistance = 200;
-    for (const index in this.gameReference.entities) {
-      const entityReference = this.gameReference.entities[index];
-      console.log(entityReference);
-      const distance = Math.sqrt(Math.pow(entityReference.position.x - this.position.x, 2) + Math.pow(entityReference.position.y - this.position.y, 2));
+    let targettedEntityRef = null;
+    let minDistance = 1000;
+    for (const index in this.gameRef.entities) {
+      const entityRef = this.gameRef.entities[index];
+      if (entityRef.constructor.name !== 'Turret') continue;
+      const distance = Math.sqrt(Math.pow(entityRef.position.x - this.position.x, 2) + Math.pow(entityRef.position.y - this.position.y, 2));
       if (distance <= minDistance) {
         minDistance = distance;
-        this.targettedEntityReference = entityReference;
+        targettedEntityRef = entityRef;
       }
     }
-    if (this.targettedEntityReference !== null) {
-      this.slope = Math.atan2(this.targettedEntityReference.position.y - this.position.y, this.targettedEntityReference.position.x - this.position.x);
-      this.speed = this.maxSpeed;
-    } else this.speed = this.maxSpeed / 4;
+    if (targettedEntityRef !== null) {
+      this.slope = Math.atan2(targettedEntityRef.position.y - this.position.y, targettedEntityRef.position.x - this.position.x);
+    }
+    else this.slope = null;
+  }
+  updateAcceleration() {
+    super.updateAcceleration();
+    this.acceleration.x = 0;
+    this.acceleration.y = 0;
+    if (this.slope !== null) {
+      this.acceleration.x = Math.cos(this.slope) * this.maxSpeed * (1 - this.gameRef.friction) / this.gameRef.friction;
+      this.acceleration.y = Math.sin(this.slope) * this.maxSpeed * (1 - this.gameRef.friction) / this.gameRef.friction;
+    }
   }
   animate() {
     super.animate();
@@ -54,49 +60,33 @@ export default class Hazard extends Entity {
       this.spawnHazards();
     }
   }
-  collide() {
-
-  }
   draw(p5) {
-    p5.strokeWeight(5);
+    const { colors } = this.gameRef;
+    const { x, y } = this.position;
+    const { rotation, slope, scale, radius, color } = this;
+    const { master, damageIndicator } = this.opacity;
+    const size = (radius + 10) * 2 * scale;
+    const graphic = p5.createGraphics(size, size);
+    const opacity = master.toFixed(1);
 
-    function burst(x, y, radius) {
-      p5.beginShape();
-      for (let i = 0; i <= 10; i++) {
-        p5.vertex(x + Math.sin(i * Math.PI / 4) * radius * 1.2, y + Math.cos(i * Math.PI / 4) * radius * 1.2);
-        p5.vertex(x + Math.sin(Math.PI * (0.125 + i * 0.25)) * radius * 0.8, y + Math.cos(Math.PI * (0.125 + i * 0.25)) * radius * 0.8);
-      }
-      p5.endShape();
+    graphic.translate(size / 2, size / 2);
+    graphic.scale(scale);
+    graphic.rotate(rotation);
+    graphic.strokeWeight(5);
+    graphic.stroke(p5.lerpColor(p5.color(colors.black), p5.color(colors.red), damageIndicator));
+    graphic.fill(p5.lerpColor(p5.color(color), p5.color(colors.red), damageIndicator));
+    graphic.beginShape();
+    for (let i = 0; i <= 20; i++) {
+      graphic.vertex(Math.sin(i * Math.PI / 8) * radius * (1 - (i % 2) / 3), Math.cos(i * Math.PI / 8) * radius * (1 - (i % 2) / 3));
+    }
+    graphic.endShape();
+
+    if (opacity > 0) {
+      if (opacity < 1) p5.tint(`hsba(0, 0%, 100%, ${opacity})`);
+      p5.image(graphic, x - size / 2, y - size / 2);
     }
 
-    p5.push();
-    p5.translate(this.position.x, this.position.y);
-    p5.scale(this.scale);
-    p5.push();
-    p5.rotate(this.rotation + this.slope);
-
-    // burst (spiky shape) outline
-    p5.noFill();
-    p5.stroke(80, 80, 80, this.opacity.master);
-    burst(0, 0, this.radius);
-
-    // burst
-    p5.fill(`rgba(${this.color.replace(/[^\d\s,]/g,'')}, ${this.opacity.master})`);
-
-    p5.noStroke();
-    burst(0, 0, this.radius - 3.6);
-
-    // damage indicator (red flash when damaged)
-    p5.fill(230, 80, 80, this.opacity.master * this.opacity.damageIndicator);
-    burst(0, 0, this.radius + 3.6);
-    p5.pop();
-    p5.noStroke();
-
-    // health bar
-    p5.fill(80, this.opacity.master * this.opacity.healthBar);
-    p5.rect(-this.radius - 2, this.radius * 1.2 + 8, this.radius * 2 + 4, 12);
-    p5.fill(0, 150, 100, this.opacity.master * this.opacity.healthBar);
-    p5.rect(-this.radius + 2, this.radius * 1.2 + 12, this.healthDisplay / this.maxHealth * (this.radius * 2 - 4), 4);
-    p5.pop();
+    p5.noTint();
+    graphic.remove();
   }
 }
