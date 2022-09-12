@@ -181,9 +181,7 @@ function setup() {
   textFont(loadFont("assets/Roboto-Black.ttf"));
 
   // create player turret
-  while (turrets.length < 90) {
-    turrets.push(new Turret({ x: windowWidth / 2 + cos(turrets.length * 360 / 90) * windowWidth / 2, y: windowHeight / 2 + sin(turrets.length * 360 / 90) * windowHeight / 2 }, ...Object.values(turret)));
-  }
+  turrets.push(new Turret({ x: windowWidth / 2, y: windowHeight / 2 }, ...Object.values(turret)));
 }
 
 class Turret {
