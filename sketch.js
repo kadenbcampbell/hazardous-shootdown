@@ -36,8 +36,6 @@
  * 
  * LEADERBOARD
  * 1.   Kaden Campbell      4173
- * 2.   Mia Hecht-Nielsen   2357
- * 3.   Arden Noland        379
  */
 
 /**
@@ -175,7 +173,7 @@ function setup() {
 
   createCanvas(windowWidth, windowHeight);
   angleMode(DEGREES);
-  frameRate(60);
+  frameRate(244);
   strokeWeight(5);
   textAlign(CENTER, CENTER);
   textFont(loadFont("assets/Roboto-Black.ttf"));
